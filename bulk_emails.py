@@ -7,6 +7,10 @@ import csv
 import getpass
 import time
 import sys
+import logging
+
+# Configure the logging
+logging.basicConfig(filename="error.log", level=logging.ERROR, format="%(message)s")
 
 def send_email(sender_email, sender_password, receiver_email, subject, body):
     try:
@@ -59,7 +63,6 @@ if __name__ == "__main__":
 
     with open('email_list.csv', 'r') as lista_emails:
         reader = csv.reader(lista_emails, delimiter=',')
-        next(reader)  # Skip the header row
         
         emails_sent = 0
 
@@ -77,16 +80,19 @@ if __name__ == "__main__":
 
             else:
                 body = body_template
-
             
-            if not send_email(sender_email, sender_password, receiver_email, subject, body):
-               break
+            try:
+                if not send_email(sender_email, sender_password, receiver_email, subject, body):
+                    raise Exception("Email sending failed")  # Simulate a failure
 
+                emails_sent += 1
+                sys.stdout.write(f"\r{emails_sent} emails sent from {total_emails} total")
+                sys.stdout.flush()
 
-            emails_sent += 1
-            sys.stdout.write(f"\r{emails_sent} emails sent from {total_emails} total")
-            sys.stdout.flush()
-            
+            except Exception as e:
+                # Log the error details to error.log
+                logging.error(f"{receiver_name},{receiver_email}")
+
             time.sleep(2)
 
 print()
